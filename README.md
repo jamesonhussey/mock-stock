@@ -38,3 +38,35 @@ A full-stack mock stock trading MVP built with Laravel, React, and Material Desi
 - Only 10 stocks are supported (see `SymbolsTableSeeder`)
 - Prices update every 10 minutes (by default)
 - For charting, use the historical data in the `stock_prices` table
+
+## Changelog
+
+### Updates (September 2025)
+Dashboard UI Improvements
+
+- Dashboard now displays a horizontally arranged summary: recent trades and portfolio positions are shown side by side for better visibility.
+- Dashboard container width increased to prevent horizontal scrolling.
+
+
+Navigation Bar
+
+- Nav bar links no longer change color on hover for better readability.
+Market Screen
+
+
+Market Changes
+
+- Each stock row now includes a dropdown with a price history chart.
+- Price history is fetched directly from the backend (/api/historical/{ticker}) using your own database records—no external API calls (Yahoo, etc).
+
+
+General UI
+
+- All main pages are centered and visually consistent using Material UI.
+- Register and login pages have a unified look.
+
+
+Technical
+
+- Removed all frontend dependencies on Yahoo Finance for price history.
+- All price and history data is now sourced from your backend API.
