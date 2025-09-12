@@ -61,6 +61,7 @@ Market Changes
 
 - Each stock row now includes a dropdown with a price history chart.
 - Price history is fetched directly from the backend (/api/historical/{ticker}) using your own database records—no external API calls (Yahoo, etc).
+- To add historical price data to your database, run `php artisan stocks:finnhub-historical {TICKER}` where {TICKER} is the stock symbol you want to import (AAPL for example). To do this, make sure your .env is configured with your Finnhub API key.
 
 
 General UI
