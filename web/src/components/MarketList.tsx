@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import StockPriceChart from './StockPriceChart';
+import type { PricePoint } from './StockPriceChart';
 import TextField from '@mui/material/TextField';
 import { placeOrder } from '../api/orders';
 import axios from 'axios';
@@ -38,6 +40,8 @@ function MarketList() {
   const [quantities, setQuantities] = useState<{ [symbol: string]: number }>({});
   const [prices, setPrices] = useState<{ [symbol: string]: number | null }>({});
   const [priceLoading, setPriceLoading] = useState(false);
+  const [history, setHistory] = useState<{ [symbol: string]: PricePoint[] | null }>({});
+  const [historyLoading, setHistoryLoading] = useState<{ [symbol: string]: boolean }>({});
 
   // Fetch prices for all stocks from backend
   useEffect(() => {
@@ -65,8 +69,26 @@ function MarketList() {
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
-  const handleToggle = (symbol: string) => {
+  const handleToggle = async (symbol: string) => {
     setOpenRows((prev) => ({ ...prev, [symbol]: !prev[symbol] }));
+    // If opening and not already loaded, fetch history from backend
+    if (!openRows[symbol] && !history[symbol]) {
+      setHistoryLoading(h => ({ ...h, [symbol]: true }));
+      try {
+        // Fetch from backend: /api/historical/{ticker}
+        const res = await axios.get(`/api/historical/${encodeURIComponent(symbol)}`);
+        // Response: array of { recorded_at, price }
+        const data: PricePoint[] = res.data.map((row: any) => ({
+          time: new Date(row.recorded_at).toLocaleDateString(),
+          price: row.price,
+        })).filter((p: PricePoint) => typeof p.price === 'number' && !isNaN(p.price));
+        setHistory(h => ({ ...h, [symbol]: data }));
+      } catch (err) {
+        setHistory(h => ({ ...h, [symbol]: null }));
+      } finally {
+        setHistoryLoading(h => ({ ...h, [symbol]: false }));
+      }
+    }
   };
 
   const handleOrder = async (symbol: string, side: 'buy' | 'sell') => {
@@ -155,9 +177,13 @@ function MarketList() {
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                   <Collapse in={openRows[stock.symbol]} timeout="auto" unmountOnExit>
                     <Box margin={1}>
-                      <Typography variant="body2" color="text.secondary">
-                        [Chart coming soon]
-                      </Typography>
+                      {historyLoading[stock.symbol] ? (
+                        <Typography variant="body2" color="text.secondary">Loading chart...</Typography>
+                      ) : history[stock.symbol] && history[stock.symbol]!.length > 0 ? (
+                        <StockPriceChart data={history[stock.symbol]!} />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">No chart data available.</Typography>
+                      )}
                     </Box>
                   </Collapse>
                 </TableCell>
