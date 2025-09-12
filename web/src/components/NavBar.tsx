@@ -41,12 +41,12 @@ export default function NavBar() {
                   color="inherit"
                   component={RouterLink}
                   to={page.path}
-                  sx={{ ml: 1 }}
+                  sx={{ ml: 1, '&:hover': { color: 'inherit' } }}
                 >
                   {page.label}
                 </Button>
               ))}
-              <Button color="inherit" onClick={handleLogout} sx={{ ml: 1 }}>
+              <Button color="inherit" onClick={handleLogout} sx={{ ml: 1, '&:hover': { color: 'inherit' } }}>
                 Logout
               </Button>
             </>
@@ -58,7 +58,7 @@ export default function NavBar() {
                   color="inherit"
                   component={RouterLink}
                   to={page.path}
-                  sx={{ ml: 1 }}
+                  sx={{ ml: 1, '&:hover': { color: 'inherit' } }}
                 >
                   {page.label}
                 </Button>
