@@ -7,7 +7,7 @@ A full-stack mock stock trading MVP built with Laravel, React, and Material Desi
 - Real-time stock prices for 10 major US stocks (via Alpha Vantage, stored in SQLite DB)
 - Buy/sell stocks with instant portfolio updates
 - Portfolio summary and recent trades dashboard
-- Historical price storage for future charting
+- Historical price storage for past and future charting
 - Material UI for a clean, modern interface
 
 ## Tech Stack

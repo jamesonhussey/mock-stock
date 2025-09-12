@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
+use Scheb\YahooFinanceApi\ApiClientFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -20,18 +20,14 @@ class FetchStockPrices extends Command
 
     public function handle()
     {
-        $apiKey = env('ALPHA_VANTAGE_API_KEY');
-        if (!$apiKey) {
-            $this->error('ALPHA_VANTAGE_API_KEY not set in .env');
-            return 1;
-        }
-        foreach ($this->tickers as $ticker) {
-            $symbol = $ticker === 'BRK-A' ? 'BRK.A' : $ticker; // Alpha Vantage uses dot for BRK.A
-            $url = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={$symbol}&apikey={$apiKey}";
-            try {
-                $response = Http::timeout(10)->get($url);
-                $data = $response->json();
-                $price = $data['Global Quote']['05. price'] ?? null;
+        $client = ApiClientFactory::createApiClient();
+        // Yahoo uses dash for BRK-A
+        $symbols = array_map(fn($t) => $t === 'BRK-A' ? 'BRK-A' : $t, $this->tickers);
+        try {
+            $quotes = $client->getQuotes($symbols);
+            foreach ($quotes as $quote) {
+                $ticker = $quote->getSymbol();
+                $price = $quote->getRegularMarketPrice();
                 if ($price) {
                     DB::table('stock_prices')->insert([
                         'ticker' => $ticker,
@@ -42,15 +38,13 @@ class FetchStockPrices extends Command
                     ]);
                     $this->info("Saved price for $ticker: $price");
                 } else {
-                    Log::warning('Alpha Vantage: No price found', ['ticker' => $ticker, 'data' => $data]);
+                    Log::warning('Yahoo Finance: No price found', ['ticker' => $ticker]);
                     $this->warn("No price for $ticker");
                 }
-                // Alpha Vantage free tier: 5 calls/minute
-                sleep(13); // Wait to avoid hitting the limit
-            } catch (\Throwable $e) {
-                Log::error('Alpha Vantage fetch failed', ['ticker' => $ticker, 'error' => $e->getMessage()]);
-                $this->error("Error fetching $ticker: " . $e->getMessage());
             }
+        } catch (\Throwable $e) {
+            Log::error('Yahoo Finance fetch failed', ['error' => $e->getMessage()]);
+            $this->error("Error fetching quotes: " . $e->getMessage());
         }
         return 0;
     }

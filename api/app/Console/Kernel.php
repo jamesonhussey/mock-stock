@@ -12,8 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Schedule the stock price fetcher to run every 10 minutes
-        $schedule->command('stocks:fetch-prices')->everyTenMinutes();
+    // Schedule the Finnhub price fetcher to run every 2 minutes
+        $schedule->command('stocks:finnhub-prices')->everyTwoMinutes();
     }
 
     /**

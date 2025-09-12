@@ -8,6 +8,7 @@ Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
 Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register']);
 Route::get('/symbols', [\App\Http\Controllers\SymbolController::class, 'index']);
 Route::get('/quotes', [\App\Http\Controllers\QuoteController::class, 'quotes']);
+Route::get('/historical/{ticker}', [\App\Http\Controllers\HistoricalPriceController::class, 'show']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
