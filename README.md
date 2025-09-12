@@ -32,6 +32,9 @@ A full-stack mock stock trading MVP built with Laravel, React, and Material Desi
 
 ### Usage
 - Visit [http://localhost:5173](http://localhost:5173) in your browser
+- To start the real-time price updating process (fetches and stores latest prices in the database):
+`php artisan stocks:finnhub-prices --loop`
+- Make sure your .env file is configured with the correct Finnhub API key.
 - Register a user, log in, and start "trading"!
 
 ## Notes
