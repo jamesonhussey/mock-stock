@@ -12,7 +12,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-    // Schedule the Finnhub price fetcher to run every 2 minutes
+        // Debug: Write to file every time Kernel is loaded
+        file_put_contents(base_path('kernel_debug.txt'), 'Kernel loaded at '.date('c')."\n", FILE_APPEND);
+        // Schedule the Finnhub price fetcher to run every 2 minutes
         $schedule->command('stocks:finnhub-prices')->everyTwoMinutes();
     }
 

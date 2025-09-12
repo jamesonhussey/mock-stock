@@ -42,7 +42,6 @@ type Portfolio = {
   equity: number;
   positions: Position[];
 };
-
 import {
   Container,
   Box,
@@ -57,49 +56,89 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
-
-function usePortfolio() {
+export default function DashboardPage() {
+  const { data: user, isLoading: userLoading } = useUser();
+  const { data: trades, isLoading: tradesLoading } = useTrades();
   const token = localStorage.getItem('token') || '';
-  return useQuery({
+  const { data: portfolio, isLoading: portfolioLoading } = useQuery({
     queryKey: ['portfolio', token],
     queryFn: () => getPortfolio(token),
     enabled: !!token,
   });
-}
 
-export default function DashboardPage() {
-  const { data, isLoading, error } = usePortfolio();
-  const { data: trades, isLoading: tradesLoading, error: tradesError } = useTrades();
-  const { data: user } = useUser();
+  if (userLoading || tradesLoading || portfolioLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" width="100vw">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!user || !portfolio) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" width="100vw">
+        <Container maxWidth="sm">
+          <Paper elevation={2} sx={{ p: 4 }}>
+            <Typography color="error">Failed to load dashboard data.</Typography>
+          </Paper>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
-    <Container maxWidth="md">
-      <Box mt={6}>
-        <Typography variant="h4" gutterBottom>
-          {`Welcome to Your Dashboard${user && user.name ? `, ${user.name}` : ''}!`}
-        </Typography>
-        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={3}>
-          <Paper elevation={2} sx={{ p: 3, flex: 1 }}>
-            <Typography variant="h6" gutterBottom>
-              Portfolio Summary
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            {isLoading ? (
-              <Box display="flex" justifyContent="center" alignItems="center" minHeight={100}>
-                <CircularProgress />
-              </Box>
-            ) : error ? (
-              <>
-                <Typography color="error">Failed to load portfolio.</Typography>
-                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                  {error instanceof Error ? error.message : JSON.stringify(error)}
-                </Typography>
-              </>
-            ) : data && typeof data === 'object' && 'cash' in data && 'equity' in data && Array.isArray(data.positions) ? (
-              <>
-                <Typography>Cash: ${data.cash.toFixed(2)}</Typography>
-                <Typography>Equity: ${data.equity.toFixed(2)}</Typography>
-                <TableContainer component={Paper} sx={{ mt: 2 }}>
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" width="100vw">
+      <Container maxWidth="md">
+        <Paper elevation={2} sx={{ p: 4 }}>
+          <Typography variant="h5" gutterBottom>
+            Welcome, {user.name}!
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            Cash: ${portfolio.cash.toFixed(2)} | Equity: ${portfolio.equity.toFixed(2)}
+          </Typography>
+          <Divider sx={{ my: 2 }} />
+          <Box display="flex" gap={4} flexWrap="wrap">
+            {/* Recent Trades Table */}
+            <Box flex={1} minWidth={320}>
+              <Typography variant="h6" gutterBottom>
+                Recent Trades
+              </Typography>
+              {Array.isArray(trades) && trades.length > 0 ? (
+                <TableContainer component={Paper}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Time</TableCell>
+                        <TableCell>Ticker</TableCell>
+                        <TableCell>Side</TableCell>
+                        <TableCell align="right">Qty</TableCell>
+                        <TableCell align="right">Price</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {trades.map((trade: any) => (
+                        <TableRow key={trade.id}>
+                          <TableCell>{new Date(trade.created_at).toLocaleString()}</TableCell>
+                          <TableCell>{trade.ticker}</TableCell>
+                          <TableCell>{trade.side}</TableCell>
+                          <TableCell align="right">{trade.qty}</TableCell>
+                          <TableCell align="right">${trade.price.toFixed(2)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography color="text.secondary">No recent trades found.</Typography>
+              )}
+            </Box>
+            {/* Portfolio Positions Table */}
+            <Box flex={1} minWidth={320}>
+              <Typography variant="h6" gutterBottom>
+                Portfolio Positions
+              </Typography>
+              {Array.isArray(portfolio.positions) && portfolio.positions.length > 0 ? (
+                <TableContainer component={Paper}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
@@ -111,67 +150,27 @@ export default function DashboardPage() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {(data.positions as Position[])
-                        .filter((pos) => pos.qty !== 0)
-                        .map((pos) => (
-                          <TableRow key={pos.ticker}>
-                            <TableCell>{pos.ticker}</TableCell>
-                            <TableCell align="right">{pos.qty}</TableCell>
-                            <TableCell align="right">${pos.avg_cost.toFixed(2)}</TableCell>
-                            <TableCell align="right">${pos.mkt_price.toFixed(2)}</TableCell>
-                            <TableCell align="right">${pos.unrealized_pl.toFixed(2)}</TableCell>
-                          </TableRow>
-                        ))}
+                      {portfolio.positions.map((pos: any) => (
+                        <TableRow key={pos.ticker}>
+                          <TableCell>{pos.ticker}</TableCell>
+                          <TableCell align="right">{pos.qty}</TableCell>
+                          <TableCell align="right">${pos.avg_cost.toFixed(2)}</TableCell>
+                          <TableCell align="right">${pos.mkt_price.toFixed(2)}</TableCell>
+                          <TableCell align="right" sx={{ color: pos.unrealized_pl >= 0 ? 'success.main' : 'error.main' }}>
+                            {pos.unrealized_pl >= 0 ? '+' : ''}${pos.unrealized_pl.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </TableContainer>
-              </>
-            ) : (
-              <Typography color="text.secondary">No portfolio data.</Typography>
-            )}
-          </Paper>
-          <Paper elevation={2} sx={{ p: 3, flex: 1 }}>
-            <Typography variant="h6" gutterBottom>
-              Recent Trades
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            {tradesLoading ? (
-              <Box display="flex" justifyContent="center" alignItems="center" minHeight={100}>
-                <CircularProgress />
-              </Box>
-            ) : tradesError ? (
-              <Typography color="error">Failed to load trades.</Typography>
-            ) : Array.isArray(trades) && trades.length > 0 ? (
-              <TableContainer component={Paper}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Time</TableCell>
-                      <TableCell>Ticker</TableCell>
-                      <TableCell>Side</TableCell>
-                      <TableCell align="right">Qty</TableCell>
-                      <TableCell align="right">Price</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(trades as Trade[]).slice(0, 10).map((trade) => (
-                      <TableRow key={trade.id}>
-                        <TableCell>{new Date(trade.created_at).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/\//g, '-')}</TableCell>
-                        <TableCell>{trade.ticker}</TableCell>
-                        <TableCell>{trade.side}</TableCell>
-                        <TableCell align="right">{trade.qty}</TableCell>
-                        <TableCell align="right">${trade.price.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Typography color="text.secondary">No trades found.</Typography>
-            )}
-          </Paper>
-        </Box>
-      </Box>
-    </Container>
+              ) : (
+                <Typography color="text.secondary">No positions in portfolio.</Typography>
+              )}
+            </Box>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 }

@@ -13,8 +13,8 @@ export default function TradesPage() {
   });
 
   return (
-    <Container maxWidth="md">
-      <Box mt={6}>
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" width="100vw">
+      <Container maxWidth="md">
         <Paper elevation={2} sx={{ p: 3 }}>
           <Typography variant="h5" gutterBottom>
             Trade History
@@ -55,7 +55,7 @@ export default function TradesPage() {
             <Typography color="text.secondary">No trades found.</Typography>
           )}
         </Paper>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 }

@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class FetchFinnhubPrices extends Command
 {
-    protected $signature = 'stocks:finnhub-prices';
+    protected $signature = 'stocks:finnhub-prices {--loop : Continuously fetch prices every 2 minutes}';
     protected $description = 'Fetch real-time prices from Finnhub for tracked stocks';
 
     protected $tickers = [
@@ -24,34 +24,40 @@ class FetchFinnhubPrices extends Command
             return 1;
         }
         $client = new Client(['base_uri' => 'https://finnhub.io/api/v1/']);
-        foreach ($this->tickers as $ticker) {
-            try {
-                $response = $client->get('quote', [
-                    'query' => [
-                        'symbol' => $ticker,
-                        'token' => $apiKey,
-                    ],
-                    'timeout' => 10,
-                ]);
-                $data = json_decode($response->getBody(), true);
-                $price = $data['c'] ?? null; // 'c' is current price
-                if ($price) {
-                    DB::table('stock_prices')->insert([
-                        'ticker' => $ticker,
-                        'price' => $price,
-                        'recorded_at' => Carbon::now(),
-                        'created_at' => Carbon::now(),
-                        'updated_at' => Carbon::now(),
+        do {
+            foreach ($this->tickers as $ticker) {
+                try {
+                    $response = $client->get('quote', [
+                        'query' => [
+                            'symbol' => $ticker,
+                            'token' => $apiKey,
+                        ],
+                        'timeout' => 10,
                     ]);
-                    $this->info("Finnhub price for $ticker: $price");
-                } else {
-                    $this->warn("No price for $ticker");
+                    $data = json_decode($response->getBody(), true);
+                    $price = $data['c'] ?? null; // 'c' is current price
+                    if ($price) {
+                        DB::table('stock_prices')->insert([
+                            'ticker' => $ticker,
+                            'price' => $price,
+                            'recorded_at' => Carbon::now(),
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now(),
+                        ]);
+                        $this->info("Finnhub price for $ticker: $price");
+                    } else {
+                        $this->warn("No price for $ticker");
+                    }
+                    sleep(1); // Be polite to Finnhub
+                } catch (\Throwable $e) {
+                    $this->error("Error fetching $ticker: " . $e->getMessage());
                 }
-                sleep(1); // Be polite to Finnhub
-            } catch (\Throwable $e) {
-                $this->error("Error fetching $ticker: " . $e->getMessage());
             }
-        }
+            if ($this->option('loop')) {
+                $this->info('Waiting 9 mins and 50 seconds before next fetch...');
+                sleep(590);
+            }
+        } while ($this->option('loop'));
         return 0;
     }
 }

@@ -10,10 +10,14 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import TradesPage from './pages/TradesPage';
 import RequireAuth from './components/RequireAuth';
 
+import Toolbar from '@mui/material/Toolbar';
+
 function App() {
   return (
     <>
       <NavBar />
+      {/* Spacer to offset fixed NavBar height */}
+      <Toolbar />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
