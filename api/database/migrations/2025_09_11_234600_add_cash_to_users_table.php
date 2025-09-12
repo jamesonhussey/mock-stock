@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->decimal('cash', 12, 2)->default(1000);
+            $table->decimal('cash', 12, 2)->default(25000);
         });
     }
 

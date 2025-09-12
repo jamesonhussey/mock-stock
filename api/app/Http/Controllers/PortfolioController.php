@@ -17,7 +17,7 @@ class PortfolioController extends Controller
     public function reset(Request $request)
     {
         $user = $request->user();
-        $user->cash = 1000;
+    $user->cash = 25000;
         $user->save();
         $user->positions()->delete();
         return response()->json(['message' => 'Portfolio reset.']);
