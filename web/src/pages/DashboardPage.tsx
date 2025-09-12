@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" width="100vw">
-      <Container maxWidth="md">
+  <Container maxWidth="lg">
         <Paper elevation={2} sx={{ p: 4 }}>
           <Typography variant="h5" gutterBottom>
             Welcome, {user.name}!
