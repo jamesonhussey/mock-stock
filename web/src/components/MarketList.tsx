@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import StockPriceChart from './StockPriceChart';
 import type { PricePoint } from './StockPriceChart';
 import TextField from '@mui/material/TextField';
@@ -42,6 +44,8 @@ function MarketList() {
   const [priceLoading, setPriceLoading] = useState(false);
   const [history, setHistory] = useState<{ [symbol: string]: PricePoint[] | null }>({});
   const [historyLoading, setHistoryLoading] = useState<{ [symbol: string]: boolean }>({});
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
 
   // Fetch prices for all stocks from backend
   useEffect(() => {
@@ -96,103 +100,127 @@ function MarketList() {
     setLoading((prev) => ({ ...prev, [symbol]: true }));
     try {
       await placeOrder(symbol, side, qty);
-      alert(`${side === 'buy' ? 'Bought' : 'Sold'} ${qty} share${qty > 1 ? 's' : ''} of ${symbol}`);
+      setSnackbar({
+        open: true,
+        message: `${side === 'buy' ? 'Bought' : 'Sold'} ${qty} share${qty > 1 ? 's' : ''} of ${symbol}`,
+        severity: side === 'buy' ? 'success' : 'error',
+      });
     } catch (err: any) {
-      alert(`Order failed: ${err?.response?.data?.message || err.message || 'Unknown error'}`);
+      setSnackbar({
+        open: true,
+        message: `Order failed: ${err?.response?.data?.message || err.message || 'Unknown error'}`,
+        severity: 'error',
+      });
     } finally {
       setLoading((prev) => ({ ...prev, [symbol]: false }));
     }
   };
 
   return (
-    <TableContainer component={Paper}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Symbol</TableCell>
-            <TableCell align="right">Price</TableCell>
-            <TableCell align="right">Market Cap</TableCell>
-            <TableCell align="center">Actions</TableCell>
-            <TableCell />
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {stockList.map((stock) => (
-            <React.Fragment key={stock.symbol}>
-              <TableRow>
-                <TableCell>{stock.name}</TableCell>
-                <TableCell>{stock.symbol}</TableCell>
-                <TableCell align="right">
-                  {(() => {
-                    const price = prices[stock.symbol];
-                    if (priceLoading && price === undefined) {
-                      return <span>Loading...</span>;
-                    } else if (typeof price === 'number' && !isNaN(price)) {
-                      return `$${price.toFixed(2)}`;
-                    } else {
-                      return <span style={{ color: '#aaa' }}>N/A</span>;
-                    }
-                  })()}
-                </TableCell>
-                <TableCell align="right">{abbreviateNumber(stock.marketCap)}</TableCell>
-                <TableCell align="center">
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <TextField
-                      type="number"
-                      size="small"
-                      inputProps={{ min: 1, style: { width: 60, padding: 4 } }}
-                      value={quantities[stock.symbol] ?? 1}
-                      onChange={e => {
-                        const val = Math.max(1, Number(e.target.value) || 1);
-                        setQuantities(q => ({ ...q, [stock.symbol]: val }));
-                      }}
-                    />
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => handleOrder(stock.symbol, 'buy')}
-                      disabled={loading[stock.symbol]}
-                    >
-                      Buy
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      sx={{ ml: 1 }}
-                      onClick={() => handleOrder(stock.symbol, 'sell')}
-                      disabled={loading[stock.symbol]}
-                    >
-                      Sell
-                    </Button>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <IconButton size="small" onClick={() => handleToggle(stock.symbol)}>
-                    {openRows[stock.symbol] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-                  <Collapse in={openRows[stock.symbol]} timeout="auto" unmountOnExit>
-                    <Box margin={1}>
-                      {historyLoading[stock.symbol] ? (
-                        <Typography variant="body2" color="text.secondary">Loading chart...</Typography>
-                      ) : history[stock.symbol] && history[stock.symbol]!.length > 0 ? (
-                        <StockPriceChart data={history[stock.symbol]!} />
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">No chart data available.</Typography>
-                      )}
+    <>
+      <TableContainer component={Paper}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Symbol</TableCell>
+              <TableCell align="right">Price</TableCell>
+              <TableCell align="right">Market Cap</TableCell>
+              <TableCell align="center">Actions</TableCell>
+              <TableCell />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {stockList.map((stock) => (
+              <React.Fragment key={stock.symbol}>
+                <TableRow>
+                  <TableCell>{stock.name}</TableCell>
+                  <TableCell>{stock.symbol}</TableCell>
+                  <TableCell align="right">
+                    {(() => {
+                      const price = prices[stock.symbol];
+                      if (priceLoading && price === undefined) {
+                        return <span>Loading...</span>;
+                      } else if (typeof price === 'number' && !isNaN(price)) {
+                        return `$${price.toFixed(2)}`;
+                      } else {
+                        return <span style={{ color: '#aaa' }}>N/A</span>;
+                      }
+                    })()}
+                  </TableCell>
+                  <TableCell align="right">{abbreviateNumber(stock.marketCap)}</TableCell>
+                  <TableCell align="center">
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <TextField
+                        type="number"
+                        size="small"
+                        inputProps={{ min: 1, style: { width: 60, padding: 4 } }}
+                        value={quantities[stock.symbol] ?? 1}
+                        onChange={e => {
+                          const val = Math.max(1, Number(e.target.value) || 1);
+                          setQuantities(q => ({ ...q, [stock.symbol]: val }));
+                        }}
+                      />
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleOrder(stock.symbol, 'buy')}
+                        disabled={loading[stock.symbol]}
+                      >
+                        Buy
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        sx={{ ml: 1 }}
+                        onClick={() => handleOrder(stock.symbol, 'sell')}
+                        disabled={loading[stock.symbol]}
+                      >
+                        Sell
+                      </Button>
                     </Box>
-                  </Collapse>
-                </TableCell>
-              </TableRow>
-            </React.Fragment>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton size="small" onClick={() => handleToggle(stock.symbol)}>
+                      {openRows[stock.symbol] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+                    <Collapse in={openRows[stock.symbol]} timeout="auto" unmountOnExit>
+                      <Box margin={1}>
+                        {historyLoading[stock.symbol] ? (
+                          <Typography variant="body2" color="text.secondary">Loading chart...</Typography>
+                        ) : history[stock.symbol] && history[stock.symbol]!.length > 0 ? (
+                          <StockPriceChart data={history[stock.symbol]!} />
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">No chart data available.</Typography>
+                        )}
+                      </Box>
+                    </Collapse>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

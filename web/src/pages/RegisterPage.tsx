@@ -25,45 +25,47 @@ export default function RegisterPage() {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box mt={8} component={Paper} elevation={3} p={4}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Register
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="Name"
-            type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <TextField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <TextField
-            label="Password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" width="100vw">
+      <Container maxWidth="sm">
+        <Box component={Paper} elevation={3} p={4}>
+          <Typography variant="h4" align="center" gutterBottom>
             Register
-          </Button>
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-        </form>
-      </Box>
-    </Container>
+          </Typography>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              label="Name"
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              label="Email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              label="Password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
+              Register
+            </Button>
+            {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+          </form>
+        </Box>
+      </Container>
+    </Box>
   );
 }
