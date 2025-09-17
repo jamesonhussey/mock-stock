@@ -1,5 +1,6 @@
 <?php
-
+// Similar to the other Yahoo file, this may not be used if Finnhub is fully reliable.
+// Still keeping it here for now.
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;

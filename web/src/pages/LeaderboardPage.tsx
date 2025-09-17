@@ -1,5 +1,5 @@
 import { Container, Box, Typography, Paper } from '@mui/material';
-
+// Not yet implemented
 export default function LeaderboardPage() {
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" width="100vw">

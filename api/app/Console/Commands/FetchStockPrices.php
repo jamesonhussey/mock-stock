@@ -1,5 +1,6 @@
 <?php
-
+// Yahoo Finance API has strict rate limits, so Finnhub is used for real time data instead.
+// I'm still going to leave this here for now in case there are unforeseen issues with Finnhub.
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;

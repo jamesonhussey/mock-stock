@@ -36,9 +36,6 @@ class SeedDemoUser extends Command
             'updated_at' => now(),
         ]);
 
-        // Add $1,000 starting cash (assume a 'cash' field or similar, or just print for now)
-        // If you want to add a 'cash' field, you must update the users table and model.
-
         $this->info("Demo user created:");
         $this->info("Email: $email");
         $this->info("Password: $password");

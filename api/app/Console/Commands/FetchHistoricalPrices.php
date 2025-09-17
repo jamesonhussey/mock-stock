@@ -34,12 +34,12 @@ class FetchHistoricalPrices extends Command
                 $this->error("Error fetching Yahoo data for $symbol: " . $e->getMessage());
                 continue;
             }
-            // Index by date for easy lookup
+            // Index by date for charting
             $byDate = [];
             foreach ($historical as $row) {
                 $byDate[$row->getDate()->format('Y-m-d')] = $row->getClose();
             }
-            // 12h for past week (use closest daily)
+            // 12h for past week
             $t = $now->copy()->startOfHour();
             for ($i = 0; $i < 14; $i++) {
                 $date = $t->copy()->subHours($i * 12)->toDateString();
@@ -76,6 +76,4 @@ class FetchHistoricalPrices extends Command
         }
         $this->info('Historical price fetching complete.');
     }
-
-    // No longer needed: getPriceForDate (handled by $byDate lookup)
 }
